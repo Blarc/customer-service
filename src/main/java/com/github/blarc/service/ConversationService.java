@@ -10,6 +10,7 @@ import com.github.blarc.model.ErrorCodeEnum;
 import com.github.blarc.model.MessageDto;
 import com.github.blarc.model.UserDto;
 import com.github.blarc.repository.ConversationRepository;
+import com.github.blarc.repository.MessageRepository;
 import com.github.blarc.repository.UserRepository;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -28,6 +29,8 @@ public class ConversationService {
     ConversationRepository conversationRepository;
     @Inject
     UserRepository userRepository;
+    @Inject
+    MessageRepository messageRepository;
 
     public List<ConversationDto> getConversations(String username, boolean isOperator) {
         if (isOperator) {
@@ -76,8 +79,9 @@ public class ConversationService {
     }
 
     public List<MessageDto> getMessagesForConversation(Long conversationId, String username, boolean isOperator) {
-        var conversation = getConversationIfUserHasAccess(conversationId, username, isOperator);
-        return conversation.getMessages().stream()
+        // Check user access and ignore returned conversation
+        getConversationIfUserHasAccess(conversationId, username, isOperator);
+        return messageRepository.findByConversationIdOrderedByTimestamp(conversationId).stream()
                 .map(message -> new MessageDto(
                         message.getMessage(),
                         message.getTimestamp(),

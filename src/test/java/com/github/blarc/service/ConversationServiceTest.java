@@ -2,6 +2,7 @@ package com.github.blarc.service;
 
 import com.github.blarc.TestUtils;
 import com.github.blarc.entity.ConversationTypeEnum;
+import com.github.blarc.entity.Message;
 import com.github.blarc.entity.UserRole;
 import com.github.blarc.exception.ExpectedCustomerServiceException;
 import com.github.blarc.model.MessageDto;
@@ -11,6 +12,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
+import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -89,8 +91,8 @@ public class ConversationServiceTest {
         var user = testUtils.persistUser(UserRole.USER);
         var conversation = testUtils.persistConversation(user);
         assertThat(conversationService.getMessagesForConversation(conversation.getId(), user.getUsername(), false))
-                .size()
-                .isEqualTo(3);
+                .hasSize(3)
+                .isSortedAccordingTo(Comparator.comparing(MessageDto::timestamp));
     }
 
     @Test

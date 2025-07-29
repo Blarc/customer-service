@@ -51,9 +51,9 @@ public class TestUtils {
         }
 
         conversation.setMessages(List.of(
-                createMessage(user),
-                createMessage(user),
-                createMessage(user)
+                createMessage(user, conversation),
+                createMessage(user, conversation),
+                createMessage(user, conversation)
         ));
 
         modify.accept(conversation);
@@ -61,10 +61,11 @@ public class TestUtils {
         return conversation;
     }
 
-    public Message createMessage(User user) {
+    public Message createMessage(User user, Conversation conversation) {
         Message message = new Message();
         message.setMessage("Hello World");
         message.setUser(user);
+        message.setConversation(conversation);
         return message;
     }
 }
