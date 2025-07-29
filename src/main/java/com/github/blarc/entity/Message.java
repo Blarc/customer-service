@@ -2,7 +2,6 @@ package com.github.blarc.entity;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Entity
