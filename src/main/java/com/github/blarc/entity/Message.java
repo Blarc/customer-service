@@ -3,6 +3,7 @@ package com.github.blarc.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 public class Message {
@@ -12,7 +13,7 @@ public class Message {
 
     private String message;
 
-    private LocalDateTime timestamp = LocalDateTime.now();
+    private OffsetDateTime timestamp = OffsetDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
@@ -32,11 +33,11 @@ public class Message {
         this.message = message;
     }
 
-    public LocalDateTime getTimestamp() {
+    public OffsetDateTime getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(OffsetDateTime timestamp) {
         this.timestamp = timestamp;
     }
 
