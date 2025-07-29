@@ -6,9 +6,9 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 public record ErrorDto(
-        @JsonProperty("message") String message,
-        @JsonProperty("errorCode") Integer errorCode,
-        @JsonProperty("timestamp") LocalDateTime timestamp
+        String message,
+        Integer errorCode,
+        LocalDateTime timestamp
 )
 {
 }
