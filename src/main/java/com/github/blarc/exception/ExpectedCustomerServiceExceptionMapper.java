@@ -10,7 +10,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 @Provider
@@ -30,7 +30,7 @@ public class ExpectedCustomerServiceExceptionMapper
         ErrorDto errorResponse = new ErrorDto(
                 message,
                 Optional.ofNullable(errorCodeEnum).map(ErrorCodeEnum::getValue).orElse(null),
-                LocalDateTime.now()
+                OffsetDateTime.now()
         );
 
         return Response
