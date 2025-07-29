@@ -3,6 +3,7 @@ package com.github.blarc.exception;
 import com.github.blarc.model.ErrorCodeEnum;
 import com.github.blarc.model.ErrorDto;
 import io.quarkus.logging.Log;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
@@ -18,7 +19,7 @@ public class ExpectedCustomerServiceExceptionMapper
         implements ExceptionMapper<ExpectedCustomerServiceException>
 {
     @Override
-    @APIResponse(responseCode = "default", content = @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = "application/json"))
+    @APIResponse(responseCode = "default", content = @Content(schema = @Schema(implementation = ErrorDto.class), mediaType = MediaType.APPLICATION_JSON))
     public Response toResponse(ExpectedCustomerServiceException e)
     {
         Log.warn(".toResponse Expected exception: " + e.getMessage(), e);
