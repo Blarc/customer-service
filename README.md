@@ -36,6 +36,39 @@ Execute tests while in dev mode by pressing `r`, or run tests separately:
 ./mvnw test
 ```
 
+## 📊 Database Schema
+
+```mermaid
+erDiagram
+    user_ {
+        bigint id PK
+        varchar_255 username UK
+        varchar_255 password
+        varchar_255 role
+    }
+    
+    conversation {
+        bigint id PK
+        smallint conversationtype
+        bigint user_id FK
+        bigint operator_id FK
+    }
+    
+    message {
+        bigint id PK
+        varchar_255 message
+        timestamp_6 timestamp
+        bigint user_id FK
+        bigint conversation_id FK
+    }
+    
+    user_ ||--o{ conversation : "user_id"
+    user_ ||--o{ conversation : "operator_id"
+    user_ ||--o{ message : "user_id"
+    conversation ||--o{ message : "conversation_id"
+```
+Also, available as [image](/imgs/db.png).
+
 ## 🔍 API Endpoints
 
 Once the application is running, you can explore the API at:
@@ -46,6 +79,8 @@ Main endpoints include:
 
 - `/user` - User management
 - `/conversations` - Message conversations
+
+Requests examples are available in [docs/conversation.http](docs/conversation.http).
 
 ## 🛠️ Configuration
 

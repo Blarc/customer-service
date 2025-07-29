@@ -1,0 +1,96 @@
+@user = user0
+@operator = operator0
+@password = qweasd123
+
+### Get conversations user0
+GET http://localhost:8080/conversations
+Accept: application/json
+Authorization: Basic {{user}} {{password}}
+
+### Create conversation for user0 of type SERVICES
+POST http://localhost:8080/conversations?type=SERVICES
+Accept: application/json
+Authorization: Basic {{user}} {{password}}
+
+### Create conversation for user0 of type CHAT
+POST http://localhost:8080/conversations?type=CHAT
+Accept: application/json
+Authorization: Basic {{user}} {{password}}
+
+### Create conversation for user0
+POST http://localhost:8080/conversations?type=IT
+Accept: application/json
+Authorization: Basic {{user}} {{password}}
+
+> {%
+    client.global.set("conversationId", response.body.id)
+    client.log(response.body.id)
+%}
+
+### Get conversations for operator0
+GET http://localhost:8080/conversations
+Accept: application/json
+Authorization: Basic {{operator}} {{password}}
+
+### Post a message
+POST http://localhost:8080/conversations/{{conversationId}}/messages
+Accept: application/json
+Authorization: Basic {{user}} {{password}}
+
+"Hello World from {{user}}!"
+
+### Get messages
+GET http://localhost:8080/conversations/{{conversationId}}/messages
+Accept: application/json
+Authorization: Basic {{user}} {{password}}
+
+### Get messages operator - should fail
+GET http://localhost:8080/conversations/{{conversationId}}/messages
+Accept: application/json
+Authorization: Basic {{operator}} {{password}}
+
+### Post a message - should fail
+POST http://localhost:8080/conversations/{{conversationId}}/messages
+Accept: application/json
+Authorization: Basic {{operator}} {{password}}
+
+"Hello World from {{operator}}!"
+
+### Take conversation
+POST http://localhost:8080/conversations/{{conversationId}}/take
+Accept: application/json
+Authorization: Basic {{operator}} {{password}}
+
+### Get messages operator
+GET http://localhost:8080/conversations/{{conversationId}}/messages
+Accept: application/json
+Authorization: Basic {{operator}} {{password}}
+
+### Post a message
+POST http://localhost:8080/conversations/{{conversationId}}/messages
+Accept: application/json
+Authorization: Basic {{operator}} {{password}}
+
+"Hello World from {{operator}}!"
+
+### Get conversations for operator1 - should not show conversations taken by operator0
+GET http://localhost:8080/conversations
+Accept: application/json
+Authorization: Basic operator1 {{password}}
+
+### Get messages operator1 - should fail
+GET http://localhost:8080/conversations/{{conversationId}}/messages
+Accept: application/json
+Authorization: Basic operator1 {{password}}
+
+### Post a message operator1 - should fail
+POST http://localhost:8080/conversations/{{conversationId}}/messages
+Accept: application/json
+Authorization: Basic operator1 {{password}}
+
+"Hello World from operator 2!"
+
+### Take conversation operator1 - should fail
+POST http://localhost:8080/conversations/{{conversationId}}/take
+Accept: application/json
+Authorization: Basic operator1 {{password}}
