@@ -14,12 +14,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 
 import java.util.List;
 
 @ApplicationScoped
 @Path("/conversations")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class ConversationEndpoint {
 
     @Inject
@@ -29,7 +32,7 @@ public class ConversationEndpoint {
     @RolesAllowed({UserRole.USER, UserRole.OPERATOR})
     public List<ConversationDto> getConversations(@Context SecurityContext securityContext) {
         String username = securityContext.getUserPrincipal().getName();
-        Boolean isOperator = securityContext.isUserInRole(UserRole.OPERATOR);
+        boolean isOperator = securityContext.isUserInRole(UserRole.OPERATOR);
         return conversationService.getConversations(username, isOperator);
     }
 
@@ -53,15 +56,18 @@ public class ConversationEndpoint {
     @RolesAllowed({UserRole.USER, UserRole.OPERATOR})
     public List<MessageDto> getMessages(@PathParam("id") @NotNull Long conversationId, @Context SecurityContext securityContext) throws ExpectedCustomerServiceException {
         String username = securityContext.getUserPrincipal().getName();
-        return conversationService.getMessagesForConversation(conversationId, username);
+        boolean isOperator = securityContext.isUserInRole(UserRole.OPERATOR);
+        return conversationService.getMessagesForConversation(conversationId, username, isOperator);
     }
 
     @POST
     @Path("/{id}/messages")
     @RolesAllowed({UserRole.USER, UserRole.OPERATOR})
+    @Consumes(MediaType.TEXT_PLAIN)
     public void addMessage(@NotBlank String message, @PathParam("id") @NotNull Long conversationId, @Context SecurityContext securityContext) {
         String username = securityContext.getUserPrincipal().getName();
-        conversationService.addMessageToConversation(message, conversationId, username);
+        boolean isOperator = securityContext.isUserInRole(UserRole.OPERATOR);
+        conversationService.addMessageToConversation(message, conversationId, username, isOperator);
     }
 
 }

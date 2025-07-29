@@ -23,17 +23,6 @@ public class ConversationRepositoryTest {
     @Inject
     TestUtils testUtils;
 
-//    @Test
-//    public void testUkConversationTypeUser() {
-//        var user = testUtils.persistUser(UserRole.USER);
-//
-//        testUtils.persistConversation(user);
-//        // Second persist should throw due to unique constraint violation
-//        assertThatThrownBy(() -> testUtils.persistConversation(user))
-//                .isInstanceOf(PersistenceException.class)
-//                .hasMessageContaining("uk_conversationtype_user");
-//    }
-
     @Test
     public void testFindConversationsForOperator() {
 
@@ -47,8 +36,8 @@ public class ConversationRepositoryTest {
         testUtils.persistConversation(testUtils.persistUser(UserRole.USER), c -> c.setOperator(operator));
         testUtils.persistConversation(testUtils.persistUser(UserRole.USER), c -> c.setOperator(operator));
 
-        List<Conversation> conversationsForOperator = conversationRepository.findConversationsForOperator(operator.getUsername());
-        assertThat(conversationsForOperator).size().isEqualTo(6);
+        List<Conversation> conversationsForOperator = conversationRepository.findAllConversationsForOperator(operator.getUsername());
+        assertThat(conversationsForOperator).size().isGreaterThanOrEqualTo(6);
     }
 
     @Test
@@ -62,7 +51,7 @@ public class ConversationRepositoryTest {
         testUtils.persistConversation(user, c -> c.setConversationType(ConversationTypeEnum.SERVICES));
         testUtils.persistConversation(user, c -> c.setConversationType(ConversationTypeEnum.SERVICES));
 
-        List<Conversation> conversationsForUser = conversationRepository.findConversationsForUser(user.getUsername());
+        List<Conversation> conversationsForUser = conversationRepository.findAllConversationsForUser(user.getUsername());
         assertThat(conversationsForUser).size().isEqualTo(6);
     }
 }

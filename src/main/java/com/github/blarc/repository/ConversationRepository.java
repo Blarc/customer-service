@@ -8,7 +8,7 @@ import java.util.List;
 
 @ApplicationScoped
 public class ConversationRepository implements PanacheRepository<Conversation> {
-    public List<Conversation> findConversationsForOperator(String username) {
+    public List<Conversation> findAllConversationsForOperator(String username) {
         // language=jpaql
         return find("""
                         SELECT c FROM Conversation c
@@ -19,9 +19,8 @@ public class ConversationRepository implements PanacheRepository<Conversation> {
         ).list();
     }
 
-    public List<Conversation> findConversationsForUser(String username) {
+    public List<Conversation> findAllConversationsForUser(String username) {
         return find("user.username = ?1", username)
                 .list();
-
     }
 }

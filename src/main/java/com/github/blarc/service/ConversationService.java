@@ -1,6 +1,9 @@
 package com.github.blarc.service;
 
-import com.github.blarc.entity.*;
+import com.github.blarc.entity.Conversation;
+import com.github.blarc.entity.ConversationTypeEnum;
+import com.github.blarc.entity.Message;
+import com.github.blarc.entity.User;
 import com.github.blarc.exception.ExpectedCustomerServiceException;
 import com.github.blarc.model.ConversationDto;
 import com.github.blarc.model.ErrorCodeEnum;
@@ -8,6 +11,7 @@ import com.github.blarc.model.MessageDto;
 import com.github.blarc.model.UserDto;
 import com.github.blarc.repository.ConversationRepository;
 import com.github.blarc.repository.UserRepository;
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -16,7 +20,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
-import java.util.Objects;
 
 @ApplicationScoped
 public class ConversationService {
@@ -26,21 +29,19 @@ public class ConversationService {
     @Inject
     UserRepository userRepository;
 
-    public List<ConversationDto> getConversations(String username, Boolean isOperator) {
+    public List<ConversationDto> getConversations(String username, boolean isOperator) {
         if (isOperator) {
-            return conversationsToDto(conversationRepository.findConversationsForOperator(username));
+            Log.infof("Retrieving all conversations for operator with username %s", username);
+            return conversationsToDto(conversationRepository.findAllConversationsForOperator(username));
         } else {
-            return conversationsToDto(conversationRepository.findConversationsForUser(username));
+            Log.infof("Retrieving all conversations for user with username %s", username);
+            return conversationsToDto(conversationRepository.findAllConversationsForUser(username));
         }
     }
 
     @Transactional
     public ConversationDto createConversation(ConversationTypeEnum conversationType, String username) {
         User user = userRepository.findByUsername(username);
-//        var conversations = conversationRepository.findConversationsForUser(username);
-//        if (conversations.stream().anyMatch(c -> c.getConversationType().equals(conversationType))) {
-//            throw new ExpectedCustomerServiceException("Conversation of this type already exist.", Response.Status.BAD_REQUEST, ErrorCodeEnum.CONVERSATION_TYPE_EXISTS, null);
-//        }
 
         var conversation = new Conversation();
         conversation.setConversationType(conversationType);
@@ -51,16 +52,31 @@ public class ConversationService {
 
     @Transactional
     public ConversationDto takeConversation(@NotNull @Valid Long id, String username) {
+        var conversation = conversationRepository.findByIdOptional(id)
+                .orElseThrow(() -> new ExpectedCustomerServiceException(
+                        String.format("Conversation with ID %s does not exist.", id),
+                        Response.Status.BAD_REQUEST,
+                        ErrorCodeEnum.CONVERSATION_DOES_NOT_EXIST,
+                        null
+                ));
+
+        if (conversation.getOperator() != null) {
+            throw new ExpectedCustomerServiceException(
+                    String.format("Conversation with ID %s has already been taken.", id),
+                    Response.Status.BAD_REQUEST,
+                    ErrorCodeEnum.CONVERSATION_ALREADY_TAKEN,
+                    null
+            );
+        }
+
         User user = userRepository.findByUsername(username);
-        var conversation = getConversationForUser(id, user);
         conversation.setOperator(user);
         conversationRepository.persist(conversation);
         return new ConversationDto(conversation.getId(), conversation.getConversationType(), conversation.getUser().getUsername());
     }
 
-    public List<MessageDto> getMessagesForConversation(Long conversationId, String username) {
-        User user = userRepository.findByUsername(username);
-        var conversation = getConversationForUser(conversationId, user);
+    public List<MessageDto> getMessagesForConversation(Long conversationId, String username, boolean isOperator) {
+        var conversation = getConversationIfUserHasAccess(conversationId, username, isOperator);
         return conversation.getMessages().stream()
                 .map(message -> new MessageDto(
                         message.getMessage(),
@@ -73,36 +89,49 @@ public class ConversationService {
                 .toList();
     }
 
-    public void addMessageToConversation(String msg, Long conversationId, String username) {
-        var user = userRepository.findByUsername(username);
-        var conversation = getConversationForUser(conversationId, user);
+    @Transactional
+    public void addMessageToConversation(String msg, Long conversationId, String username, boolean isOperator) {
+        var conversation = getConversationIfUserHasAccess(conversationId, username, isOperator);
 
+        var user = userRepository.findByUsername(username);
         var message = new Message();
         message.setMessage(msg);
         message.setUser(user);
+        message.setConversation(conversation);
 
         conversation.getMessages().add(message);
         conversationRepository.persist(conversation);
     }
 
-    private Conversation getConversationForUser(Long conversationId, User user) {
-        List<Conversation> conversations;
-        if (Objects.equals(user.getRole(), UserRole.OPERATOR)) {
-            conversations = conversationRepository.findConversationsForOperator(user.getUsername());
-        } else {
-            conversations = conversationRepository.findConversationsForUser(user.getUsername());
-        }
-
-        return conversations.stream()
-                .filter(c -> c.getId().equals(conversationId))
-                .findAny()
+    private Conversation getConversationIfUserHasAccess(Long conversationId, String username, boolean isOperator) {
+        var conversation = conversationRepository.findByIdOptional(conversationId)
                 .orElseThrow(() -> new ExpectedCustomerServiceException(
-                        String.format("Conversation with ID %s does not exist or can not be accessed.", conversationId),
+                        String.format("Conversation with ID %s does not exist.", conversationId),
                         Response.Status.BAD_REQUEST,
-                        ErrorCodeEnum.CONVERSATION_WITH_ID_DOES_NOT_EXIST,
+                        ErrorCodeEnum.CONVERSATION_DOES_NOT_EXIST,
                         null
                 ));
+
+        validateUserAccess(conversation,  username, isOperator);
+        return conversation;
     }
+
+    private void validateUserAccess(Conversation conversation, String username, boolean isOperator) {
+        boolean hasAccess = isOperator
+                ? conversation.getOperator() != null && conversation.getOperator().getUsername().equals(username)
+                : conversation.getUser() != null && conversation.getUser().getUsername().equals(username);
+
+        if (!hasAccess) {
+            throw new ExpectedCustomerServiceException(
+                    String.format("Conversation with ID %s can not be accessed by user %s.",
+                            conversation.getId(), username),
+                    Response.Status.BAD_REQUEST,
+                    ErrorCodeEnum.CONVERSATION_NOT_ALLOWED,
+                    null
+            );
+        }
+    }
+
 
     private List<ConversationDto> conversationsToDto(List<Conversation> conversations) {
         return conversations.stream()

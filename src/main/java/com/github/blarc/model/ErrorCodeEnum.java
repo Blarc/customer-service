@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ErrorCodeEnum
 {
-    CONVERSATION_TYPE_EXISTS(101),
-    CONVERSATION_WITH_ID_DOES_NOT_EXIST(102),
+    CONVERSATION_DOES_NOT_EXIST(101),
+    CONVERSATION_NOT_TAKEN(102),
+    CONVERSATION_NOT_ALLOWED(103),
+    CONVERSATION_ALREADY_TAKEN(104),
     UNKNOWN(100);
 
     private final int value;
