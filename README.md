@@ -77,7 +77,6 @@ Once the application is running, you can explore the API at:
 
 Main endpoints include:
 
-- `/user` - User management
 - `/conversations` - Message conversations
 
 Requests examples are available in [docs/conversation.http](docs/conversation.http).
