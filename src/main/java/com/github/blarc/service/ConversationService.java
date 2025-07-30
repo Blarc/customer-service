@@ -5,10 +5,7 @@ import com.github.blarc.entity.ConversationTypeEnum;
 import com.github.blarc.entity.Message;
 import com.github.blarc.entity.User;
 import com.github.blarc.exception.ExpectedCustomerServiceException;
-import com.github.blarc.model.ConversationDto;
-import com.github.blarc.model.ErrorCodeEnum;
-import com.github.blarc.model.MessageDto;
-import com.github.blarc.model.UserDto;
+import com.github.blarc.model.*;
 import com.github.blarc.repository.ConversationRepository;
 import com.github.blarc.repository.MessageRepository;
 import com.github.blarc.repository.UserRepository;
@@ -78,10 +75,12 @@ public class ConversationService {
         return new ConversationDto(conversation.getId(), conversation.getConversationType(), conversation.getUser().getUsername());
     }
 
-    public List<MessageDto> getMessagesForConversation(Long conversationId, String username, boolean isOperator) {
+    public PagedResultDto<MessageDto> getMessagesForConversation(Long conversationId, String username, boolean isOperator, int pageSize, int pageIndex) {
         // Check user access and ignore returned conversation
         getConversationIfUserHasAccess(conversationId, username, isOperator);
-        return messageRepository.findByConversationIdOrderedByTimestamp(conversationId).stream()
+
+        var count = messageRepository.findByConversationIdOrderedByTimestampPageCount(conversationId, pageSize);
+        var messages = messageRepository.findByConversationIdOrderedByTimestampPage(conversationId, pageSize, pageIndex).stream()
                 .map(message -> new MessageDto(
                         message.getMessage(),
                         message.getTimestamp(),
@@ -91,6 +90,9 @@ public class ConversationService {
                         )
                 ))
                 .toList();
+
+
+        return new PagedResultDto<>(messages, count);
     }
 
     @Transactional

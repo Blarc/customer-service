@@ -44,6 +44,13 @@ GET http://localhost:8080/conversations/{{conversationId}}/messages
 Accept: application/json
 Authorization: Basic {{user}} {{password}}
 
+### Get messages with paging
+GET http://localhost:8080/conversations/{{conversationId}}/messages?
+    pageSize=2&
+    pageIndex=1
+Accept: application/json
+Authorization: Basic {{user}} {{password}}
+
 ### Get messages operator - should fail
 GET http://localhost:8080/conversations/{{conversationId}}/messages
 Accept: application/json

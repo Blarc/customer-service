@@ -76,7 +76,7 @@ public class ConversationServiceTest {
         var conversation = testUtils.persistConversation(user);
         var operator = testUtils.persistUser(UserRole.OPERATOR);
 
-        assertThatThrownBy(() -> conversationService.getMessagesForConversation(conversation.getId(), operator.getUsername(), true))
+        assertThatThrownBy(() -> conversationService.getMessagesForConversation(conversation.getId(), operator.getUsername(), true, 20, 0))
                 .isInstanceOf(ExpectedCustomerServiceException.class)
                 .hasMessageContaining(String.format("Conversation with ID %s can not be accessed by user %s.", conversation.getId(), operator.getUsername()));
 
@@ -90,7 +90,7 @@ public class ConversationServiceTest {
     public void getMessagesForConversationForUser() {
         var user = testUtils.persistUser(UserRole.USER);
         var conversation = testUtils.persistConversation(user);
-        assertThat(conversationService.getMessagesForConversation(conversation.getId(), user.getUsername(), false))
+        assertThat(conversationService.getMessagesForConversation(conversation.getId(), user.getUsername(), false, 20, 0).content())
                 .hasSize(3)
                 .isSortedAccordingTo(Comparator.comparing(MessageDto::timestamp));
     }
@@ -104,25 +104,25 @@ public class ConversationServiceTest {
         var conversationDto = conversationService.createConversation(ConversationTypeEnum.IT, user.getUsername());
         String messageFromUser = "A message from the user.";
         conversationService.addMessageToConversation(messageFromUser, conversationDto.id(), user.getUsername(), false);
-        List<MessageDto> userMessages = conversationService.getMessagesForConversation(conversationDto.id(), user.getUsername(), false);
+        List<MessageDto> userMessages = conversationService.getMessagesForConversation(conversationDto.id(), user.getUsername(), false, 20, 0).content();
         assertThat(userMessages).hasSize(1);
 
         // Operator takes the conversation
         conversationDto = conversationService.takeConversation(conversationDto.id(), operator.getUsername());
         assertThat(conversationDto.username()).isEqualTo(user.getUsername());
-        List<MessageDto> operatorMessages = conversationService.getMessagesForConversation(conversationDto.id(), operator.getUsername(), true);
+        List<MessageDto> operatorMessages = conversationService.getMessagesForConversation(conversationDto.id(), operator.getUsername(), true, 20, 0).content();
         assertThat(operatorMessages).hasSize(1);
         assertThat(operatorMessages.getFirst().message()).isEqualTo(messageFromUser);
 
         // Operator leaves a message
         String messageFromOperator = "A message from the operator.";
         conversationService.addMessageToConversation(messageFromOperator,  conversationDto.id(), operator.getUsername(), true);
-        operatorMessages = conversationService.getMessagesForConversation(conversationDto.id(), operator.getUsername(), true);
+        operatorMessages = conversationService.getMessagesForConversation(conversationDto.id(), operator.getUsername(), true, 20, 0).content();
         assertThat(operatorMessages).hasSize(2);
         assertThat(operatorMessages.stream().map(MessageDto::message)).contains(messageFromOperator, messageFromUser);
 
         // User retrieves the messages
-        userMessages = conversationService.getMessagesForConversation(conversationDto.id(), user.getUsername(), false);
+        userMessages = conversationService.getMessagesForConversation(conversationDto.id(), user.getUsername(), false, 20, 0).content();
         assertThat(userMessages).hasSize(2);
         assertThat(operatorMessages.stream().map(MessageDto::message)).contains(messageFromOperator, messageFromUser);
     }

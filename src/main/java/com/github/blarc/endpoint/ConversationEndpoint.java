@@ -5,6 +5,7 @@ import com.github.blarc.entity.UserRole;
 import com.github.blarc.exception.ExpectedCustomerServiceException;
 import com.github.blarc.model.ConversationDto;
 import com.github.blarc.model.MessageDto;
+import com.github.blarc.model.PagedResultDto;
 import com.github.blarc.service.ConversationService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -54,10 +55,15 @@ public class ConversationEndpoint {
     @GET
     @Path("/{id}/messages")
     @RolesAllowed({UserRole.USER, UserRole.OPERATOR})
-    public List<MessageDto> getMessages(@PathParam("id") @NotNull Long conversationId, @Context SecurityContext securityContext) throws ExpectedCustomerServiceException {
+    public PagedResultDto<MessageDto> getMessages(
+            @PathParam("id") @NotNull Long conversationId,
+            @QueryParam("pageSize") @DefaultValue("20") int pageSize,
+            @QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
+            @Context SecurityContext securityContext
+    ) throws ExpectedCustomerServiceException {
         String username = securityContext.getUserPrincipal().getName();
         boolean isOperator = securityContext.isUserInRole(UserRole.OPERATOR);
-        return conversationService.getMessagesForConversation(conversationId, username, isOperator);
+        return conversationService.getMessagesForConversation(conversationId, username, isOperator, pageSize, pageIndex);
     }
 
     @POST
