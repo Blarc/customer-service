@@ -2,7 +2,6 @@ package com.github.blarc.service;
 
 import com.github.blarc.TestUtils;
 import com.github.blarc.entity.ConversationTypeEnum;
-import com.github.blarc.entity.Message;
 import com.github.blarc.entity.UserRole;
 import com.github.blarc.exception.ExpectedCustomerServiceException;
 import com.github.blarc.model.MessageDto;
