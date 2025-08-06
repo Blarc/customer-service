@@ -4,6 +4,7 @@ import com.github.blarc.entity.ConversationTypeEnum;
 import com.github.blarc.entity.UserRole;
 import com.github.blarc.exception.ExpectedCustomerServiceException;
 import com.github.blarc.model.ConversationDto;
+import com.github.blarc.model.CreateConversationDto;
 import com.github.blarc.model.MessageDto;
 import com.github.blarc.model.PagedResultDto;
 import com.github.blarc.service.ConversationService;
@@ -39,9 +40,9 @@ public class ConversationEndpoint {
 
     @POST
     @RolesAllowed({UserRole.USER})
-    public ConversationDto createConversation(@QueryParam("type") @NotNull @Valid ConversationTypeEnum conversationType, @Context SecurityContext securityContext) {
+    public ConversationDto createConversation(@NotNull @Valid CreateConversationDto createConversationDto, @Context SecurityContext securityContext) {
         String username = securityContext.getUserPrincipal().getName();
-        return conversationService.createConversation(conversationType, username);
+        return conversationService.createConversation(createConversationDto.type(), username);
     }
 
     @POST
