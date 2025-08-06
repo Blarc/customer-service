@@ -67,7 +67,7 @@ erDiagram
     user_ ||--o{ message : "user_id"
     conversation ||--o{ message : "conversation_id"
 ```
-Also, available as [image](/imgs/db.png).
+Also, available as [image](imgs/db.png).
 
 ## 🔍 API Endpoints
 
