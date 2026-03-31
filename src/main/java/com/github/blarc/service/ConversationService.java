@@ -55,7 +55,7 @@ public class ConversationService {
         var conversation = conversationRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ExpectedCustomerServiceException(
                         String.format("Conversation with ID %s does not exist.", id),
-                        Response.Status.BAD_REQUEST,
+                        Response.Status.NOT_FOUND,
                         ErrorCodeEnum.CONVERSATION_DOES_NOT_EXIST,
                         null
                 ));
