@@ -9,3 +9,4 @@ quarkus:
       devservices:
         # Keep local dev predictable, but avoid collisions in tests.
         port: 5432
+        reuse: true
