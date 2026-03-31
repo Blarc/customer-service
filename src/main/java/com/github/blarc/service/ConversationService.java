@@ -13,8 +13,6 @@ import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.core.Response;
 
 import java.util.List;
@@ -51,28 +49,35 @@ public class ConversationService {
     }
 
     @Transactional
-    public ConversationDto takeConversation(@NotNull @Valid Long id, String username) {
-        var conversation = conversationRepository.findByIdOptional(id)
-                .orElseThrow(() -> new ExpectedCustomerServiceException(
+    public ConversationDto takeConversation(Long id, String username) {
+        User operator = userRepository.findByUsername(username);
+
+        // Atomic update to avoid race conditions when taking conversations
+        var updated = conversationRepository.assignOperatorIfUnassigned(operator, id);
+        if (!updated) {
+            var conversation = conversationRepository.findByIdOptional(id);
+            if (conversation.isEmpty()) {
+                throw new ExpectedCustomerServiceException(
                         String.format("Conversation with ID %s does not exist.", id),
                         Response.Status.NOT_FOUND,
                         ErrorCodeEnum.CONVERSATION_DOES_NOT_EXIST,
                         null
-                ));
-
-        if (conversation.getOperator() != null) {
+                );
+            }
             throw new ExpectedCustomerServiceException(
                     String.format("Conversation with ID %s has already been taken.", id),
-                    Response.Status.BAD_REQUEST,
+                    Response.Status.CONFLICT,
                     ErrorCodeEnum.CONVERSATION_ALREADY_TAKEN,
                     null
             );
         }
 
-        User user = userRepository.findByUsername(username);
-        conversation.setOperator(user);
-        conversationRepository.persist(conversation);
-        return new ConversationDto(conversation.getId(), conversation.getConversationType(), conversation.getUser().getUsername());
+        Conversation conversation = conversationRepository.findById(id);
+        return new ConversationDto(
+                conversation.getId(),
+                conversation.getConversationType(),
+                conversation.getUser().getUsername()
+        );
     }
 
     public PagedResultDto<MessageDto> getMessagesForConversation(Long conversationId, String username, boolean isOperator, int pageSize, int pageIndex) {

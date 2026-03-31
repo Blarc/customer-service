@@ -53,8 +53,15 @@ public class ConversationServiceTest {
         var operator = testUtils.persistUser(UserRole.OPERATOR);
         // Operator can take open conversations
         var conversationDto = conversationService.takeConversation(conversation.getId(), operator.getUsername());
+
+        // takeConversation does atomic update to avoid race conditions when taking conversations,
+        // so we need to flush and clear the entity manager to see the changes
+        conversationRepository.getEntityManager().flush();
+        conversationRepository.getEntityManager().clear();
+        var updatedConversation = conversationRepository.findById(conversation.getId());
+
         assertThat(conversationDto.username()).isEqualTo(user.getUsername());
-        assertThat(conversation.getOperator().getUsername()).isEqualTo(operator.getUsername());
+        assertThat(updatedConversation.getOperator().getUsername()).isEqualTo(operator.getUsername());
         // Operator can see the conversations he's taken
         var conversations = conversationService.getConversations(operator.getUsername(), true);
         assertThat(conversations).hasSize(1);
@@ -64,9 +71,9 @@ public class ConversationServiceTest {
         conversations = conversationService.getConversations(operator2.getUsername(), true);
         assertThat(conversations).hasSize(0);
         // Operator cannot take already taken conversations
-        assertThatThrownBy(() -> conversationService.takeConversation(conversation.getId(), operator2.getUsername()))
+        assertThatThrownBy(() -> conversationService.takeConversation(updatedConversation.getId(), operator2.getUsername()))
                 .isInstanceOf(ExpectedCustomerServiceException.class)
-                .hasMessageContaining(String.format("Conversation with ID %s has already been taken.", conversation.getId()));
+                .hasMessageContaining(String.format("Conversation with ID %s has already been taken.", updatedConversation.getId()));
     }
 
     @Test
@@ -108,6 +115,12 @@ public class ConversationServiceTest {
 
         // Operator takes the conversation
         conversationDto = conversationService.takeConversation(conversationDto.id(), operator.getUsername());
+
+        // takeConversation does atomic update to avoid race conditions when taking conversations,
+        // so we need to flush and clear the entity manager to see the changes
+        conversationRepository.getEntityManager().flush();
+        conversationRepository.getEntityManager().clear();
+
         assertThat(conversationDto.username()).isEqualTo(user.getUsername());
         List<MessageDto> operatorMessages = conversationService.getMessagesForConversation(conversationDto.id(), operator.getUsername(), true, 20, 0).content();
         assertThat(operatorMessages).hasSize(1);
