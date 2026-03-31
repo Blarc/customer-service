@@ -4,7 +4,7 @@ A REST API built with Quarkus for managing customer service conversations. This 
 
 ## 🏗️ Tech Stack
 
-- **Framework**: Quarkus 3.24.5
+- **Framework**: Quarkus 3.34.1
 - **Language**: Java 21
 - **Database**: PostgreSQL (with Hibernate ORM Panache)
 - **Security**: Quarkus Security JPA with password hashing

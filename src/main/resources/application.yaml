@@ -1,8 +1,11 @@
 quarkus:
-  datasource:
-    devservices:
-      # prevents assigning a random port
-      port: 5432
   hibernate-orm:
     schema-management:
       strategy: drop-and-create
+
+"%dev":
+  quarkus:
+    datasource:
+      devservices:
+        # Keep local dev predictable, but avoid collisions in tests.
+        port: 5432
