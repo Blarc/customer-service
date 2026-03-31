@@ -1,6 +1,5 @@
 package com.github.blarc.endpoint;
 
-import com.github.blarc.entity.ConversationTypeEnum;
 import com.github.blarc.entity.UserRole;
 import com.github.blarc.exception.ExpectedCustomerServiceException;
 import com.github.blarc.model.ConversationDto;
